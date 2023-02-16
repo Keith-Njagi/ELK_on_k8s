@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: elk-stack
+data:
+  pipeline.conf: |
+    input {
+      beats {
+        port => "5044"
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["10.255.184.215:32496"]
+        index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  namespace: elk-stack
+spec:
+  selector:
+    matchLabels:
+      app: logstash
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:8.6.0
+          ports:
+            - containerPort: 5044
+              name: beats
+            - containerPort: 9600
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /usr/share/logstash/pipeline
+      volumes:
+        - name: config
+          configMap:
+            name: logstash-config

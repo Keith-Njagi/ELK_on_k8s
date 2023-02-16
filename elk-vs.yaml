@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: elk-vs
+  namespace: elk-stack
+spec:
+  hosts:
+  - "d32dllh5abbco.cloudfront.net"
+  gateways:
+  - elk-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: kibana
+        port:
+          number: 5601
